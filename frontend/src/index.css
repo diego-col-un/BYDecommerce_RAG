@@ -1,0 +1,72 @@
+/* index.css — Sistema de diseño AutoElectric AI */
+/* Estética: industrial-futurista, negro profundo con acento eléctrico */
+
+:root {
+  --bg-void:      #080b10;
+  --bg-panel:     #0d1117;
+  --bg-card:      #111820;
+  --bg-input:     #161e28;
+  --border:       #1e2d3d;
+  --border-glow:  #00d4ff40;
+  --accent:       #00d4ff;
+  --accent-dim:   #00d4ff20;
+  --accent-mid:   #00d4ff60;
+  --accent-warm:  #ff6b35;
+  --accent-green: #00ff88;
+  --text-primary: #e8f4f8;
+  --text-secondary:#7a9ab0;
+  --text-muted:   #3d5a70;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+  --radius:       6px;
+  --radius-lg:    12px;
+  --shadow:       0 4px 24px #000a;
+  --shadow-glow:  0 0 40px #00d4ff18;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; }
+
+body {
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  min-height: 100vh;
+  /* Grain texture sutil */
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, #00d4ff08 0%, transparent 70%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-panel); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-mid); }
+
+/* Selección de texto */
+::selection { background: var(--accent-dim); color: var(--accent); }
+
+/* Animaciones base */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-dim); }
+  50%       { box-shadow: 0 0 0 8px transparent; }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
