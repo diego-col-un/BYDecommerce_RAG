@@ -22,7 +22,7 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.openai_like import OpenAILike
 from llama_index.core.vector_stores import SimpleVectorStore
 
-load_dotenv()
+load_dotenv(override=True)  # Carga variables de entorno desde .env
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 # ── Configuración global ──────────────────────────────────────────────────────
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-LLM_MODEL          = os.getenv("LLM_MODEL", "meta-llama/llama-3.1-8b-instruct:free")
+LLM_MODEL = os.getenv("LLM_MODEL", "meta-llama/llama-3.1-8b-instruct:free")
 CATALOG_PATH       = os.getenv("CATALOG_PATH", "data/catalogo_vehiculos.csv")
 INDEX_PATH         = os.getenv("INDEX_PATH", "embeddings/faiss_index")
 
@@ -73,12 +73,13 @@ EQUIPAMIENTO:
 DESCRIPCIÓN:
 {row['descripcion']}
 """.strip()
-
-
 def _load_llm() -> OpenAILike:
     """Instancia el LLM de OpenRouter compatible con la API de OpenAI."""
     if not OPENROUTER_API_KEY:
         raise ValueError("OPENROUTER_API_KEY no está configurada en el archivo .env")
+
+    logger.info(f"🤖 Usando modelo LLM: '{LLM_MODEL}'")
+    logger.info(f"🔑 API Key (primeros 10 chars): '{OPENROUTER_API_KEY[:10]}'")
 
     return OpenAILike(
         model=LLM_MODEL,
@@ -92,7 +93,6 @@ def _load_llm() -> OpenAILike:
             "X-Title": "Catalogo RAG Vehiculos",
         },
     )
-
 
 def _load_embed_model() -> HuggingFaceEmbedding:
     """Carga el modelo de embeddings multilingüe."""
