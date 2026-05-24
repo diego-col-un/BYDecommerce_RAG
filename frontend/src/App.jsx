@@ -161,13 +161,6 @@ export default function App() {
               {NAV_ITEMS.find(n => n.id === page)?.label}
             </span>
           </div>
-          <div style={{ display: "flex", gap: 20, fontSize: 12, color: "var(--text-muted)" }}>
-            <span>20 vehículos indexados</span>
-            <span>·</span>
-            <span>OpenRouter API</span>
-            <span>·</span>
-            <span>FAISS Vector Store</span>
-          </div>
         </header>
 
         {/* Página activa */}
