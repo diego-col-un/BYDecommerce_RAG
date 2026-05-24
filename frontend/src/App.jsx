@@ -27,12 +27,17 @@ function StatusDot({ ok }) {
 export default function App() {
   const [page, setPage]       = useState("chat");
   const [backendOk, setBackendOk] = useState(null);
+  const [healthData, setHealthData] = useState(null)
+
 
   useEffect(() => {
     healthCheck()
-      .then(() => setBackendOk(true))
+      .then((data) => {        // ← recibe los datos
+        setBackendOk(true);
+        setHealthData(data);   // ← guárdalos
+      })
       .catch(() => setBackendOk(false));
-  }, []);
+  }, []);  
 
   return (
     <div style={{
@@ -121,11 +126,11 @@ export default function App() {
             </span>
           </div>
           <div style={{ color: "var(--text-muted)", lineHeight: 1.4 }}>
-            <div>🤖 Llama 3.1 8B</div>
+            <div>🤖 {healthData?.model || "Cargando..."}</div>
             <div>⚡ LlamaIndex + FAISS</div>
-            <div>🔤 Multilingual MPNET</div>
+            <div>🔤 {healthData?.embedding || "Multilingual MPNET"}</div>
           </div>
-        </div>
+  </div>
 
         {/* Info del proyecto */}
         <div style={{ padding: "12px 20px 0", fontSize: 10, color: "var(--text-muted)", lineHeight: 1.5 }}>

@@ -19,7 +19,7 @@ def health():
     return jsonify({
         "status": "ok",
         "rag_initialized": rag_engine._initialized,
-        "model": "meta-llama/llama-3.1-8b-instruct:free",
+        "model": "google/gemini-2.0-flash-lite-001",
         "embedding": "paraphrase-multilingual-mpnet-base-v2",
     })
 

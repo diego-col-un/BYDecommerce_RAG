@@ -15,6 +15,7 @@ from llama_index.core import (
     Document,
     Settings,
     StorageContext,
+    PromptTemplate,
     load_index_from_storage,
 )
 from llama_index.core.node_parser import SentenceSplitter
@@ -22,7 +23,7 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.openai_like import OpenAILike
 from llama_index.core.vector_stores import SimpleVectorStore
 
-load_dotenv(override=True)  # Carga variables de entorno desde .env
+load_dotenv(override=True)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -30,12 +31,33 @@ logger = logging.getLogger(__name__)
 # ── Configuración global ──────────────────────────────────────────────────────
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-LLM_MODEL = os.getenv("LLM_MODEL", "meta-llama/llama-3.1-8b-instruct:free")
+LLM_MODEL          = os.getenv("LLM_MODEL", "meta-llama/llama-3.1-8b-instruct:free")
 CATALOG_PATH       = os.getenv("CATALOG_PATH", "data/catalogo_vehiculos.csv")
 INDEX_PATH         = os.getenv("INDEX_PATH", "embeddings/faiss_index")
 
-# Embedding multilingüe (funciona bien en español)
 EMBED_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+
+# ── Prompt template personalizado ─────────────────────────────────────────────
+
+QA_PROMPT = PromptTemplate(
+    """Eres un asesor experto en vehículos eléctricos de una concesionaria premium.
+Responde ÚNICAMENTE basándote en la información del catálogo que se te proporciona abajo.
+Responde siempre en español, de forma clara, amable y profesional.
+Cuando menciones precios, usa el formato colombiano (ej: $139.900.000 COP).
+Cuando compares vehículos, usa tablas o listas estructuradas.
+IMPORTANTE: El catálogo SÍ contiene información relevante. Úsala para responder.
+Si genuinamente no hay información sobre lo preguntado en el contexto, indícalo brevemente.
+
+INFORMACIÓN DEL CATÁLOGO:
+---------------------
+{context_str}
+---------------------
+
+PREGUNTA DEL CLIENTE: {query_str}
+
+RESPUESTA:"""
+)
+
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -73,6 +95,8 @@ EQUIPAMIENTO:
 DESCRIPCIÓN:
 {row['descripcion']}
 """.strip()
+
+
 def _load_llm() -> OpenAILike:
     """Instancia el LLM de OpenRouter compatible con la API de OpenAI."""
     if not OPENROUTER_API_KEY:
@@ -94,6 +118,7 @@ def _load_llm() -> OpenAILike:
         },
     )
 
+
 def _load_embed_model() -> HuggingFaceEmbedding:
     """Carga el modelo de embeddings multilingüe."""
     logger.info(f"Cargando modelo de embeddings: {EMBED_MODEL_NAME}")
@@ -105,7 +130,7 @@ def _load_embed_model() -> HuggingFaceEmbedding:
 class RAGEngine:
     """
     Motor de recuperación y generación aumentada (RAG) para el catálogo de vehículos.
-    
+
     Flujo:
         CSV → Documents → Chunks → Embeddings → FAISS Index
         Query → Embedding → Similitud → Top-K Chunks → LLM → Respuesta
@@ -139,10 +164,13 @@ class RAGEngine:
             self.index.storage_context.persist(persist_dir=str(index_dir))
             logger.info(f"Índice guardado en: {index_dir}")
 
-        # 3. Crear query engine con prompt en español
+        # 3. Crear query engine con prompt template personalizado
         self.query_engine = self.index.as_query_engine(
             similarity_top_k=4,
             response_mode="compact",
+        )
+        self.query_engine.update_prompts(
+            {"response_synthesizer:text_qa_template": QA_PROMPT}
         )
 
         self._initialized = True
@@ -157,7 +185,6 @@ class RAGEngine:
         df = pd.read_csv(catalog_path)
         logger.info(f"Catálogo cargado: {len(df)} vehículos")
 
-        # Crear un Document de LlamaIndex por cada vehículo
         documents = []
         for _, row in df.iterrows():
             text = _build_document_text(row)
@@ -177,7 +204,6 @@ class RAGEngine:
 
         logger.info(f"{len(documents)} documentos creados — generando embeddings...")
 
-        # Splitter por oraciones para respetar contexto semántico
         splitter = SentenceSplitter(chunk_size=512, chunk_overlap=64)
 
         return VectorStoreIndex.from_documents(
@@ -200,19 +226,9 @@ class RAGEngine:
 
         logger.info(f"Query: {user_question}")
 
-        # Prompt enriquecido en español para el LLM
-        full_prompt = f"""Eres un asesor experto en vehículos eléctricos de una concesionaria premium.
-Responde ÚNICAMENTE basándote en la información del catálogo proporcionado.
-Si la respuesta no está en el catálogo, dilo claramente: "Esta información no está en nuestro catálogo actual."
-Responde siempre en español, de forma clara, amable y profesional.
-Cuando menciones precios, usa el formato colombiano (ej: $139.900.000 COP).
-Cuando compares vehículos, usa tablas o listas estructuradas.
+        # La pregunta va directo — las instrucciones están en QA_PROMPT
+        response = self.query_engine.query(user_question)
 
-PREGUNTA DEL CLIENTE: {user_question}"""
-
-        response = self.query_engine.query(full_prompt)
-
-        # Extraer fuentes recuperadas del índice
         sources = []
         if hasattr(response, "source_nodes"):
             for node in response.source_nodes:

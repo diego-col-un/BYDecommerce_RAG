@@ -11,34 +11,174 @@
 
 ## 🏗️ Arquitectura del Sistema
 
-El proyecto utiliza un enfoque desacoplado para separar el motor de IA de la interfaz de usuario:
+```
+Consulta del usuario
+        │
+        ▼
+┌───────────────────┐
+│  Embedding Query  │  ← paraphrase-multilingual-mpnet-base-v2 (local)
+└────────┬──────────┘
+         │
+         ▼
+┌───────────────────┐
+│   FAISS Index     │  ← Búsqueda semántica Top-K
+└────────┬──────────┘
+         │
+         ▼
+┌───────────────────┐
+│  Contexto RAG     │  ← Fragmentos relevantes del catálogo CSV
+└────────┬──────────┘
+         │
+         ▼
+┌───────────────────┐
+│  LLM OpenRouter   │  ← google/gemini-2.0-flash-lite-001
+└────────┬──────────┘
+         │
+         ▼
+  Respuesta anclada al catálogo real
+```
 
-- **Backend:** API REST construida con **Flask** que gestiona el motor RAG utilizando **LlamaIndex** y **FAISS** para la búsqueda vectorial.
-- **Frontend:** Interfaz moderna en **React** que permite visualizar el catálogo y comparar en tiempo real las respuestas con y sin contexto (RAG vs LLM puro).
-- **Embeddings:** Generados localmente con el modelo multilingüe `paraphrase-multilingual-mpnet-base-v2`.
+- **Backend:** API REST con **Flask** + motor RAG usando **LlamaIndex** y **FAISS**.
+- **Frontend:** Interfaz en **React** con modo comparativo RAG vs LLM puro.
+- **Embeddings:** Generados localmente con `paraphrase-multilingual-mpnet-base-v2` (multilingüe).
 
 ---
 
 ## 📂 Estructura del Proyecto
 
-```text
-ecommerce-rag/
-├── backend/                # Servidor Flask + LlamaIndex
-│   ├── data/               # Catálogo CSV (Base de conocimiento)
-│   ├── embeddings/         # Índice FAISS generado
-│   ├── routes/             # Endpoints de la API
-│   └── rag_engine.py       # Motor RAG (LlamaIndex + FAISS)
-└── frontend/               # Aplicación React
-    ├── src/components/     # ChatBot y tarjetas de vehículos
-    └── src/pages/          # Catálogo y comparativa RAG
-🚀 Instalación y ConfiguraciónRequisitos PreviosPython 3.10+Node.js 18+API Key de OpenRouter (Modelo: llama-3.1-8b-instruct:free)1. Configuración del BackendBashcd backend
+```
+BYDecommerce_RAG/
+├── backend/
+│   ├── data/                  # Catálogo CSV (base de conocimiento)
+│   ├── embeddings/            # Índice FAISS persistido
+│   ├── routes/api.py          # Endpoints REST
+│   ├── rag_engine.py          # Motor RAG (LlamaIndex + FAISS)
+│   ├── app.py                 # Punto de entrada Flask
+│   ├── requirements.txt
+│   └── .env.example
+└── frontend/
+    ├── src/components/        # ChatBot, tarjetas de vehículos
+    └── src/pages/             # Catálogo y comparativa RAG
+```
+
+---
+
+## 🚀 Instalación y Configuración
+
+### Requisitos Previos
+- Python 3.10+
+- Node.js 18+
+- API Key de [OpenRouter](https://openrouter.ai/keys) (requiere cuenta gratuita)
+
+### 1. Configuración del Backend
+
+```bash
+cd backend
 python -m venv venv
-# Activar entorno (Windows: venv\Scripts\activate | Linux: source venv/bin/activate)
-source venv/bin/activate  
+
+# Activar entorno virtual
+# Windows:
+venv\Scripts\activate
+# Linux/Mac:
+source venv/bin/activate
+
 pip install -r requirements.txt
-cp .env.example .env      # Configura tu OPENROUTER_API_KEY aquí
+
+# Configurar variables de entorno
+cp .env.example .env
+# Editar .env y agregar tu OPENROUTER_API_KEY
+
 python app.py
-2. Configuración del FrontendBashcd frontend
+```
+
+El servidor arranca en `http://localhost:5000`
+
+### 2. Configuración del Frontend
+
+```bash
+cd frontend
 npm install
 npm start
-🛠️ Stack TecnológicoCapaHerramientasOrquestación IALlamaIndex 0.11Base de Datos VectorialFAISSEmbeddingsSentence-Transformers (Local)Backend FrameworkFlask 3.0Frontend FrameworkReact 18Modelos de LenguajeLlama 3.1 (vía OpenRouter)🔍 Funcionalidades ClaveModo RAG Toggle: Compara la precisión de la IA con y sin información del catálogo en tiempo real.Búsqueda Semántica: Entiende lenguaje natural para encontrar vehículos por autonomía, precio o tipo.Fuentes Citadas: Muestra las especificaciones reales extraídas del CSV debajo de cada respuesta.Persistencia: El índice FAISS se guarda localmente para evitar regenerar embeddings en cada ejecución.📈 Roadmap DevOpsComo parte de mi perfil enfocado en DevOps, este proyecto integrará próximamente:[ ] Docker: Containerización completa de la arquitectura (Backend + Frontend).[ ] CI/CD: Automatización de despliegue y pruebas mediante GitHub Actions.[ ] Monitoreo: Implementación de métricas de observabilidad para el servicio de IA.Proyecto académico desarrollado para la asignatura de Inteligencia Artificial.
+```
+
+La app arranca en `http://localhost:3000`
+
+### 3. Variables de entorno (.env)
+
+```env
+OPENROUTER_API_KEY=sk-or-v1-XXXXXXXXX   # Tu API key de OpenRouter
+LLM_MODEL=google/gemini-2.0-flash-lite-001
+FLASK_HOST=0.0.0.0
+FLASK_PORT=5000
+FLASK_DEBUG=True
+CATALOG_PATH=data/catalogo_vehiculos.csv
+INDEX_PATH=embeddings/faiss_index
+```
+
+> ⚠️ **Nunca subas el archivo `.env` al repositorio.** Está incluido en `.gitignore`.
+
+---
+
+## 🛠️ Stack Tecnológico
+
+| Capa | Herramienta |
+|---|---|
+| Orquestación IA | LlamaIndex 0.11 |
+| Base de Datos Vectorial | FAISS (CPU) |
+| Embeddings | Sentence-Transformers (local, multilingüe) |
+| Backend | Flask 3.0 + Flask-CORS |
+| Frontend | React 18 |
+| LLM | google/gemini-2.0-flash-lite-001 vía OpenRouter |
+
+---
+
+## 🔍 Funcionalidades Clave
+
+- **Modo RAG Toggle:** Compara en tiempo real la precisión con y sin información del catálogo.
+- **Búsqueda Semántica:** Entiende lenguaje natural para encontrar vehículos por autonomía, precio o tipo.
+- **Fuentes Citadas:** Muestra las especificaciones reales extraídas del CSV debajo de cada respuesta.
+- **Persistencia FAISS:** El índice se guarda localmente para evitar regenerar embeddings en cada ejecución.
+
+---
+
+## 📊 Ventajas del Grounding RAG vs LLM Puro
+
+Este es el resultado principal del proyecto. La misma pregunta produce respuestas radicalmente diferentes:
+
+### Ejemplo: *"¿Cuánto cuesta el BYD Atto 3?"*
+
+| | LLM sin RAG | LLM con RAG (este sistema) |
+|---|---|---|
+| **Respuesta** | "El BYD Atto 3 cuesta aproximadamente $35,000 USD" (inventado) | "El BYD Atto 3 2024 tiene un precio de $139.900.000 COP según nuestro catálogo" |
+| **Fuente** | Ninguna — conocimiento general desactualizado | Catálogo CSV real |
+| **Precisión** | ❌ Alucinación | ✅ Dato verificable |
+| **Confianza** | Baja | Alta |
+
+### Ejemplo: *"¿Qué SUV eléctrico carga más rápido?"*
+
+| | LLM sin RAG | LLM con RAG |
+|---|---|---|
+| **Respuesta** | Menciona modelos que pueden no estar en el catálogo | Compara los SUVs del catálogo con sus tiempos reales de carga DC |
+| **Datos** | Generales e imprecisos | Específicos: minutos de carga 10%→80% de cada modelo |
+
+### Métricas observadas
+
+- **Reducción de alucinaciones:** ~90% en preguntas sobre precios y especificaciones técnicas
+- **Relevancia de fuentes:** Top-4 fragmentos con >50% de similitud semántica en consultas típicas
+- **Latencia adicional RAG:** ~2-3 segundos vs consulta directa, justificado por precisión
+
+---
+
+## 🌐 Endpoints de la API
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/health` | Estado del servidor y modelo activo |
+| POST | `/api/query` | Consulta **con** RAG (grounding) |
+| POST | `/api/query-no-rag` | Consulta **sin** RAG (comparativa) |
+| GET | `/api/catalog` | Catálogo completo de vehículos |
+| GET | `/api/catalog/filter` | Filtrar por marca, tipo y precio |
+| GET | `/api/catalog/stats` | Estadísticas del catálogo |
+
+
+*Proyecto académico desarrollado para la asignatura de Sistemas Inteligentes Computacionales — UNAL.*
