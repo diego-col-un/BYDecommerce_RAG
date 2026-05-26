@@ -112,6 +112,7 @@ def _load_llm() -> OpenAILike:
         is_chat_model=True,
         max_tokens=1024,
         temperature=0.3,
+        logprobs=False,  # ← agregar esta línea
         default_headers={
             "HTTP-Referer": "http://localhost:3000",
             "X-Title": "Catalogo RAG Vehiculos",
