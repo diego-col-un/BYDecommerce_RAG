@@ -23,17 +23,15 @@ logger = logging.getLogger(__name__)
 def create_app() -> Flask:
     app = Flask(__name__)
 
-    # Permitir peticiones desde el frontend React (localhost:3000)
     CORS(app, resources={r"/api/*": {"origins": [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://diego-col-un-bydecommerce-rag.hf.space",
     ]}})
 
-    # Registrar blueprint con todas las rutas
     from routes.api import api_bp
     app.register_blueprint(api_bp)
 
-    # Inicializar el motor RAG al arrancar el servidor
     from rag_engine import rag_engine
     with app.app_context():
         logger.info("Inicializando RAG Engine (esto puede tomar 1-2 min la primera vez)...")
@@ -49,8 +47,8 @@ def create_app() -> Flask:
 
 if __name__ == "__main__":
     host  = os.getenv("FLASK_HOST", "0.0.0.0")
-    port  = int(os.getenv("FLASK_PORT", 5000))
-    debug = os.getenv("FLASK_DEBUG", "True").lower() == "true"
+    port  = int(os.getenv("FLASK_PORT", 7860))
+    debug = os.getenv("FLASK_DEBUG", "False").lower() == "true"
 
     app = create_app()
 
