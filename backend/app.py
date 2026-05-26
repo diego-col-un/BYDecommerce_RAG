@@ -27,6 +27,8 @@ def create_app() -> Flask:
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "https://diego-col-un-bydecommerce-rag.hf.space",
+        "https://by-decommerce-rag.vercel.app",
+        "https://by-decommerce-rfq1rr3hg-diego-aristizabals-projects.vercel.app",
     ]}})
 
     from routes.api import api_bp
