@@ -16,7 +16,8 @@ RUN pip install --no-cache-dir \
     sentence-transformers==3.3.1 \
     "pandas==2.2.3" \
     python-dotenv==1.0.1 \
-    "httpx==0.27.2" && \
+    "httpx==0.27.2" \
+    openai>=1.0.0 && \
     pip install --no-cache-dir --no-deps llama-index-llms-openai==0.1.31 && \
     pip install --no-cache-dir --no-deps llama-index-llms-openai-like==0.2.0
 
