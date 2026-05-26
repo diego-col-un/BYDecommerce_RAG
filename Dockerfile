@@ -17,6 +17,7 @@ RUN pip install --no-cache-dir \
     "pandas==2.2.3" \
     python-dotenv==1.0.1 \
     "httpx==0.27.2" && \
+    pip install --no-cache-dir --no-deps llama-index-llms-openai==0.1.31 && \
     pip install --no-cache-dir --no-deps llama-index-llms-openai-like==0.2.0
 
 EXPOSE 7860
