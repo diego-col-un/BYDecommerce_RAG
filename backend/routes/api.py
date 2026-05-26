@@ -9,7 +9,7 @@ from rag_engine import rag_engine
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
-CATALOG_PATH = "data/catalogo_vehiculos.csv"
+CATALOG_PATH = "backend/data/catalogo_vehiculos.csv"
 
 
 # ── Endpoint: estado del servidor ─────────────────────────────────────────────
